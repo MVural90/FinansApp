@@ -1,0 +1,32 @@
+{
+  "name": "FinansApp",
+  "short_name": "FinansApp",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/5501/5501360.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Gelir Ekle",
+      "short_name": "Gelir",
+      "description": "Hızlıca gelir ekle",
+      "url": "/income.html",
+      "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/5501/5501360.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Gider Ekle",
+      "short_name": "Gider",
+      "description": "Hızlıca gider ekle",
+      "url": "/expenses.html",
+      "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/5501/5501360.png", "sizes": "192x192" }]
+    }
+  ]
+}

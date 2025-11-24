@@ -1,0 +1,17 @@
+# Backup files
+*.backup
+
+# PowerShell server scripts (not needed for GitHub Pages)
+server.ps1
+server_socket.ps1
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

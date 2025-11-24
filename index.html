@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finans Yönetimi - Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#111827">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">FinansApp</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link active">Özet</a>
+                <a href="income.html" class="nav-link">Gelirler</a>
+                <a href="expenses.html" class="nav-link">Giderler</a>
+                <a href="budget.html" class="nav-link">Bütçe</a>
+                <button onclick="resetData()" class="nav-link"
+                    style="background: none; border: none; color: var(--danger); cursor: pointer;">Sıfırla</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container main-content">
+        <header class="mb-4 flex justify-between items-center">
+            <div>
+                <h1>Hoşgeldiniz, <span id="current-month-text" class="text-primary"></span></h1>
+                <p class="text-secondary">Finansal durumunuzun özeti</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="changeMonth(-1)" class="btn" style="padding: 0.2rem 0.6rem;">&lt;</button>
+                <input type="month" id="dashboard-month" class="form-control" style="width: auto;" onchange="render()">
+                <button onclick="changeMonth(1)" class="btn" style="padding: 0.2rem 0.6rem;">&gt;</button>
+            </div>
+        </header>
+
+        <!-- Summary Cards -->
+        <div class="grid-dashboard"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+            <div class="card">
+                <h3>Net Durum (Bu Ay)</h3>
+                <h2 id="net-worth" class="text-primary">₺0,00</h2>
+                <div class="flex justify-between mt-4">
+                    <div>
+                        <small class="text-secondary">Toplam Varlık</small>
+                        <div id="total-assets" class="text-success">₺0,00</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <small class="text-secondary">Toplam Borç</small>
+                        <div id="total-debt" class="text-danger">₺0,00</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Aylık Gelir</h3>
+                <h2 id="month-income" class="text-success">₺0,00</h2>
+            </div>
+            <div class="card">
+                <h3>Aylık Gider</h3>
+                <h2 id="month-expense" class="text-danger">₺0,00</h2>
+            </div>
+            <div class="card">
+                <h3>Aylık Fark</h3>
+                <h2 id="month-balance" class="text-primary">₺0,00</h2>
+            </div>
+        </div>
+
+        <div class="grid-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+
+            <!-- Accounts Section -->
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h3>Hesaplarım (Varlıklar)</h3>
+                    <button onclick="openAccountModal()" class="btn btn-primary" style="padding: 0.5rem;">+
+                        Ekle</button>
+                </div>
+                <div id="accounts-list"
+                    style="display: flex; flex-direction: column; gap: 1rem; max-height: 300px; overflow-y: auto; padding-right: 0.5rem;">
+                    <!-- Accounts will be listed here -->
+                </div>
+            </div>
+
+            <!-- Cards Section -->
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h3>Kartlarım (Borçlar)</h3>
+                    <button onclick="openCardModal()" class="btn btn-danger" style="padding: 0.5rem;">+ Ekle</button>
+                </div>
+                <div id="cards-list"
+                    style="display: flex; flex-direction: column; gap: 1rem; max-height: 300px; overflow-y: auto; padding-right: 0.5rem;">
+                    <!-- Cards will be listed here -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Account Modal -->
+    <div id="account-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="card" style="width: 90%; max-width: 400px; position: relative;">
+            <button onclick="closeModals()"
+                style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.5rem;">&times;</button>
+            <h3 class="mb-4" id="account-modal-title">Hesap Ekle</h3>
+            <form id="account-form" onsubmit="handleAccountSubmit(event)">
+                <input type="hidden" id="account-id">
+                <div class="form-group">
+                    <label class="form-label">Hesap Adı</label>
+                    <input type="text" id="account-name" class="form-control" required placeholder="Örn: X Bankası">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Başlangıç Bakiyesi</label>
+                    <input type="number" id="account-balance" class="form-control" required step="0.01"
+                        placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Günlük Faiz Oranı (%)</label>
+                    <input type="number" id="account-interest" class="form-control" step="0.0001" placeholder="0.05">
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Kaydet</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Card Modal -->
+    <div id="card-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="card" style="width: 90%; max-width: 400px; position: relative;">
+            <button onclick="closeModals()"
+                style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.5rem;">&times;</button>
+            <h3 class="mb-4" id="card-modal-title">Kart Ekle</h3>
+            <form id="card-form" onsubmit="handleCardSubmit(event)">
+                <input type="hidden" id="card-id">
+                <div class="form-group">
+                    <label class="form-label">Kart Adı</label>
+                    <input type="text" id="card-name" class="form-control" required placeholder="Örn: Bonus Card">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Limit</label>
+                    <input type="number" id="card-limit" class="form-control" required step="0.01" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Hesap Kesim Günü</label>
+                    <input type="number" id="card-cutoff" class="form-control" min="1" max="31" placeholder="Örn: 10">
+                    <small class="text-secondary">Her ayın kaçında hesap kesiliyor?</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Son Ödeme Günü</label>
+                    <input type="number" id="card-payment" class="form-control" min="1" max="31" placeholder="Örn: 20">
+                    <small class="text-secondary">Her ayın kaçında ödeme yapılıyor?</small>
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Kaydet</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        function initPage() {
+            // Set default month to current month
+            const today = new Date();
+            const monthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+            document.getElementById('dashboard-month').value = monthStr;
+            render();
+        }
+
+        function changeMonth(delta) {
+            const input = document.getElementById('dashboard-month');
+            const [year, month] = input.value.split('-').map(Number);
+            const date = new Date(year, month - 1 + delta, 1);
+            input.value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            render();
+        }
+
+        function render() {
+            const filterVal = document.getElementById('dashboard-month').value;
+            const [year, month] = filterVal.split('-').map(Number);
+
+            // Update Welcome Text
+            const date = new Date(year, month - 1);
+            const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+            document.getElementById('current-month-text').textContent = monthNames[date.getMonth()];
+
+            // Calculate Totals
+            const monthly = getMonthlyTotals(year, month - 1);
+            const monthlyBalance = monthly.income - monthly.expense;
+
+            // Update Net Worth to show Monthly Balance
+            document.getElementById('net-worth').textContent = formatCurrency(monthlyBalance);
+            document.getElementById('net-worth').className = monthlyBalance >= 0 ? 'text-success' : 'text-danger';
+
+            document.getElementById('total-assets').textContent = formatCurrency(getTotalAssets());
+            document.getElementById('total-debt').textContent = formatCurrency(getTotalDebt());
+
+            document.getElementById('month-income').textContent = formatCurrency(monthly.income);
+            document.getElementById('month-expense').textContent = formatCurrency(monthly.expense);
+
+            const balanceEl = document.getElementById('month-balance');
+            balanceEl.textContent = formatCurrency(monthlyBalance);
+            balanceEl.className = monthlyBalance >= 0 ? 'text-success' : 'text-danger';
+
+            renderAccounts();
+            renderCards();
+        }
+
+        function renderAccounts() {
+            const list = document.getElementById('accounts-list');
+            list.innerHTML = '';
+
+            state.accounts.forEach(acc => {
+                const div = document.createElement('div');
+                div.style.padding = '1rem';
+                div.style.background = 'rgba(255,255,255,0.05)';
+                div.style.borderRadius = '0.5rem';
+                div.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <strong>${acc.name}</strong>
+                        <span class="text-success">${formatCurrency(acc.balance)}</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-4" style="font-size: 0.9rem;">
+                        <span class="text-secondary">Faiz: %${acc.interestRate}</span>
+                        <div>
+                            <button onclick="editAccount('${acc.id}')" class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">Düzenle</button>
+                            <button onclick="deleteAccountHandler('${acc.id}')" class="btn text-danger" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">Sil</button>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function renderCards() {
+            const list = document.getElementById('cards-list');
+            list.innerHTML = '';
+
+            state.cards.forEach(card => {
+                const div = document.createElement('div');
+                div.style.padding = '1rem';
+                div.style.background = 'rgba(255,255,255,0.05)';
+                div.style.borderRadius = '0.5rem';
+                div.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <strong>${card.name}</strong>
+                        <span class="text-danger">Borç: ${formatCurrency(card.currentDebt)}</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-4" style="font-size: 0.9rem;">
+                        <span class="text-secondary">Limit: ${formatCurrency(card.limit)}</span>
+                        <div>
+                            <button onclick="editCard('${card.id}')" class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">Düzenle</button>
+                            <button onclick="deleteCardHandler('${card.id}')" class="btn text-danger" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">Sil</button>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function deleteAccountHandler(id) {
+            if (confirm('Bu hesabı silmek istediğinize emin misiniz?')) {
+                deleteAccount(id);
+            }
+        }
+
+        function deleteCardHandler(id) {
+            if (confirm('Bu kartı silmek istediğinize emin misiniz?')) {
+                deleteCard(id);
+            }
+        }
+
+        // --- MODAL HANDLERS ---
+
+        function closeModals() {
+            document.getElementById('account-modal').style.display = 'none';
+            document.getElementById('card-modal').style.display = 'none';
+        }
+
+        // Account
+        function openAccountModal() {
+            document.getElementById('account-form').reset();
+            document.getElementById('account-id').value = '';
+            document.getElementById('account-modal-title').textContent = 'Hesap Ekle';
+            document.getElementById('account-modal').style.display = 'flex';
+        }
+
+        function editAccount(id) {
+            const acc = state.accounts.find(a => a.id === id);
+            if (acc) {
+                document.getElementById('account-id').value = acc.id;
+                document.getElementById('account-name').value = acc.name;
+                document.getElementById('account-balance').value = acc.balance;
+                document.getElementById('account-interest').value = acc.interestRate;
+                document.getElementById('account-modal-title').textContent = 'Hesap Düzenle';
+                document.getElementById('account-modal').style.display = 'flex';
+            }
+        }
+
+        function handleAccountSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('account-id').value;
+            const name = document.getElementById('account-name').value;
+            const balance = document.getElementById('account-balance').value;
+            const interest = document.getElementById('account-interest').value || 0;
+
+            if (id) {
+                updateAccount(id, { name, balance: parseFloat(balance), interestRate: parseFloat(interest) });
+            } else {
+                addAccount(name, balance, interest);
+            }
+            closeModals();
+            render();
+        }
+
+        // Card
+        function openCardModal() {
+            document.getElementById('card-form').reset();
+            document.getElementById('card-id').value = '';
+            document.getElementById('card-modal-title').textContent = 'Kart Ekle';
+            document.getElementById('card-modal').style.display = 'flex';
+        }
+
+        function editCard(id) {
+            const card = state.cards.find(c => c.id === id);
+            if (card) {
+                document.getElementById('card-id').value = card.id;
+                document.getElementById('card-name').value = card.name;
+                document.getElementById('card-limit').value = card.limit;
+                document.getElementById('card-cutoff').value = card.cutoffDay;
+                document.getElementById('card-payment').value = card.paymentDay || '';
+                document.getElementById('card-modal-title').textContent = 'Kart Düzenle';
+                document.getElementById('card-modal').style.display = 'flex';
+            }
+        }
+
+        function handleCardSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('card-id').value;
+            const name = document.getElementById('card-name').value;
+            const limit = document.getElementById('card-limit').value;
+            const cutoff = document.getElementById('card-cutoff').value;
+            const payment = document.getElementById('card-payment').value;
+
+            if (id) {
+                updateCard(id, {
+                    name,
+                    limit: parseFloat(limit),
+                    cutoffDay: parseInt(cutoff),
+                    paymentDay: payment ? parseInt(payment) : null
+                });
+            } else {
+                addCard(name, limit, cutoff, payment);
+            }
+            closeModals();
+            render();
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+    </script>
+</body>
+
+</html>
